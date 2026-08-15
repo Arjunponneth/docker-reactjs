@@ -72,3 +72,16 @@ jobs:
       - name: Push image to Nexus
         run: |
           docker push 3.110.183.74:8082/docker-reactjs:${{ github.sha }}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/react-deployment
+            export IMAGE_TAG=${{ github.sha }}
+            docker compose pull
+            docker compose up -d
+            docker ps

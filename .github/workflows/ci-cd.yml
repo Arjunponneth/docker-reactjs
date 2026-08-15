@@ -9,8 +9,9 @@ on:
     branches:
       - master
 
-jobs:
+  workflow_dispatch:
 
+jobs:
   test:
     runs-on: ubuntu-latest
 
@@ -29,3 +30,10 @@ jobs:
 
       - name: Run tests
         run: npm test -- --watchAll=false
+
+      - name: Build React application
+        run: npm run build
+
+      - name: Build Docker image
+        run: docker build -t react-app:${{ github.sha }} .
+

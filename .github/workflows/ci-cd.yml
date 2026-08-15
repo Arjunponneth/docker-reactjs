@@ -12,10 +12,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -46,8 +47,28 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-reactjs:${{ github.sha }} .
+      - name: Configure Docker for Nexus
+        run: |
+          echo '{"insecure-registries":["3.110.183.74:8082"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
 
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-reactjs:${{ github.sha }}
+      - name: Login to Nexus
+        run: |
+          echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 3.110.183.74:8082 \
+            -u "${{ secrets.NEXUS_USERNAME }}" \
+            --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/docker-reactjs:${{ github.sha }} \
+            -t 3.110.183.74:8082/docker-reactjs:${{ github.sha }} \
+            .
+
+      - name: Push image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/docker-reactjs:${{ github.sha }}
+
+      - name: Push image to Nexus
+        run: |
+          docker push 3.110.183.74:8082/docker-reactjs:${{ github.sha }}

@@ -1,6 +1,6 @@
 services:
   react-app:
-    image: ${IMAGE_NAME:-react-app}:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-react-app}:${IMAGE_TAG:-1.0}
     container_name: react-app
     ports:
       - "80:80"
